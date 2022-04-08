@@ -806,44 +806,32 @@ dng_time_zone LocalTimeZone (const dng_date_time &dt)
 		#if qMacOS
 		
 		CFTimeZoneRef zoneRef = CFTimeZoneCopyDefault ();
-
-		CFReleaseHelper<CFTimeZoneRef> zoneRefDeleter (zoneRef);
-
+		
 		if (zoneRef)
 			{
+			
+			CFGregorianDate gregDate;
 
-			// New path that doesn't use deprecated CFGregorian-based APIs.
-
-			CFCalendarRef calendar =
-				CFCalendarCreateWithIdentifier (kCFAllocatorDefault,
-												kCFGregorianCalendar);
-
-			CFReleaseHelper<CFCalendarRef> calendarDeleter (calendar);
-
-			CFAbsoluteTime absTime;
-
-			if (CFCalendarComposeAbsoluteTime (calendar,
-											   &absTime,
-											   "yMdHms",
-											   dt.fYear,
-											   dt.fMonth,
-											   dt.fDay,
-											   dt.fHour,
-											   dt.fMinute,
-											   dt.fSecond))
+			gregDate.year   = dt.fYear;
+			gregDate.month  = (SInt8) dt.fMonth;
+			gregDate.day    = (SInt8) dt.fDay;
+			gregDate.hour   = (SInt8) dt.fHour;
+			gregDate.minute = (SInt8) dt.fMinute;
+			gregDate.second = (SInt8) dt.fSecond;
+			
+			CFAbsoluteTime absTime = CFGregorianDateGetAbsoluteTime (gregDate, zoneRef);
+			
+			CFTimeInterval secondsDelta = CFTimeZoneGetSecondsFromGMT (zoneRef, absTime);
+		
+			CFRelease (zoneRef);
+			
+			result.SetOffsetSeconds (Round_int32 (secondsDelta));
+			
+			if (result.IsValid ())
 				{
-
-				CFTimeInterval secondsDelta = CFTimeZoneGetSecondsFromGMT (zoneRef, absTime);
-
-				result.SetOffsetSeconds (Round_int32 (secondsDelta));
-
-				if (result.IsValid ())
-					{
-					return result;
-					}
-
+				return result;
 				}
-
+			
 			}
 		
 		#endif
