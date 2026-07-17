@@ -1544,7 +1544,7 @@ class dng_negative
 		
 		/// Default cropped image aspect ratio.
 		
-		real64 AspectRatio () const
+		real64 BaseAspectRatio () const
 			{
 			return SquareWidth	() /
 				   SquareHeight ();
